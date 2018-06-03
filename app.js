@@ -1,44 +1,39 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var ws = require('webshot');
+const express = require('express');
+const bodyParser = require('body-parser');
+const puppeteer = require('puppeteer');
 
-var app = express();
+const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.post('/', function(req, res, next) {
+app.get('/screenshot', function(req, res, next) {
+  const viewportWidth = 1200;
+  const viewportHeight = 900;
+  (async () => {
+    const browser = await puppeteer.launch({
+      args: [
+        '--no-sandbox'
+      ],
+      headless: true
+    });
+    const page = await browser.newPage();
+    page.setViewport({width: viewportWidth, height: viewportHeight});
 
-  var options = {
-    screenSize: {
-        width:  1024
-      , height: 768
-    }
-    , userAgent: 'Mozilla/5.0 (compatible; MSIE 11.0; Windows NT 6.2; Trident/6.0)'
-    , renderDelay: 2000
-    , timeout: 30000
-    , phantomConfig: {
-        'ignore-ssl-errors': 'true'
-        , "ssl-protocol": "any"
-    }
-    , phantomPath: '/usr/local/bin/phantomjs'
-  };
+    await page.goto(req.query.url);
+    page.evaluate(_ => {
+      window.scrollBy(0, window.innerHeight);
+    });
 
-  if (req.body.type !== 'thumb') {
-    options['shotSize'] = { width: 'all', height: 'all'};
-  }
+    data = await page.screenshot({
+      fullPage: true
+    });
+    await browser.close();
 
-  var rs = ws(req.body.target,options);
-
-  rs.on('data', function(data){
-    res.write(data.toString('base64'));
-  });
-  rs.on('error', function(e){
-    console.log(e);
-  });
-  rs.on('end', function(){
+    res.set('Content-Type', 'image/png');
+    res.write(data);
     res.end();
-  });
+  })();
 });
 
 module.exports = app;
