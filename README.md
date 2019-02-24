@@ -25,5 +25,5 @@ node $ DEBUG=snapshot:* npm start
 ## Usage
 
 ```
-$ curl -XPOST --data "target=https://example.jp" https://example.jp:3000/
+$ curl http://localhost:3000/screenshot?url=https://example.jp
 ```
