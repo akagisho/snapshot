@@ -20,6 +20,10 @@ app.get('/screenshot', function(req, res, next) {
     const page = await browser.newPage();
     page.setViewport({width: viewportWidth, height: viewportHeight});
 
+    if (process.env.HTTP_USER_AGENT) {
+      page.setUserAgent(process.env.HTTP_USER_AGENT);
+    }
+
     await page.goto(req.query.url);
     page.evaluate(_ => {
       window.scrollBy(0, window.innerHeight);
